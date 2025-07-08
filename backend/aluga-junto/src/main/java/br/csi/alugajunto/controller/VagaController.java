@@ -2,9 +2,7 @@ package br.csi.alugajunto.controller;
 
 
 import br.csi.alugajunto.model.usuario.Usuario;
-import br.csi.alugajunto.model.vaga.Endereco;
-import br.csi.alugajunto.model.vaga.Perfil;
-import br.csi.alugajunto.model.vaga.Vaga;
+import br.csi.alugajunto.model.vaga.*;
 import br.csi.alugajunto.service.VagaService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.Operation;
@@ -26,18 +24,22 @@ import org.springframework.web.util.UriComponentsBuilder;
 import java.io.IOException;
 import java.net.URI;
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/vaga")
 @Tag(name = "Vagas", description = "Path relacionado a operações de vagas")
 public class VagaController {
     private final VagaService service;
+    private final VagaRepositoryCustom vagaRepositoryCustom;
 
-    public VagaController(VagaService service) {
+    public VagaController(VagaService service, VagaRepositoryCustom vagaRepositoryCustom) {
+        this.vagaRepositoryCustom = vagaRepositoryCustom;
         this.service = service;
     }
 
-    @Operation(summary = "Listar todas as vagas", description = "Retorna uma lista de todas as vagas disponíveis.")
+    @Operation(summary = "Listar todas as vagas",
+            description = "Retorna uma lista de todas as vagas disponíveis.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Lista de vagas retornada com sucesso")
     })
@@ -49,7 +51,8 @@ public class VagaController {
 
     ///http://localhost:8080/aluga-junto/vaga/{id}
     @GetMapping("/{id}")
-    @Operation(summary = "Buscar vaga por ID", description = "Retorna uma vaga correspondente ao ID fornecido")
+    @Operation(summary = "Buscar vaga por ID",
+            description = "Retorna uma vaga correspondente ao ID fornecido")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Vaga encontrado",
                     content = @Content(mediaType = "application/json",
@@ -63,7 +66,8 @@ public class VagaController {
     ///http://localhost:8080/aluga-junto/vaga
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Transactional
-    @Operation(summary = "Criar uma nova vaga", description = "Cria uma nova vaga e o adiciona à lista")
+    @Operation(summary = "Criar uma nova vaga",
+            description = "Cria uma nova vaga e o adiciona à lista")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Vaga criada com sucesso",
                     content = @Content(mediaType = "application/json",
@@ -114,7 +118,8 @@ public class VagaController {
     }
 
     ///http://localhost:8080/aluga-junto/vaga
-    @Operation(summary = "Atualizar vaga", description = "Atualiza as informações de uma vaga existente.")
+    @Operation(summary = "Atualizar vaga",
+            description = "Atualiza as informações de uma vaga existente.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Vaga atualizada com sucesso"),
             @ApiResponse(responseCode = "404", description = "Vaga não encontrada")
@@ -126,7 +131,8 @@ public class VagaController {
     }
 
     ///http://localhost:8080/aluga-junto/vaga/{id}
-    @Operation(summary = "Excluir uma vaga", description = "Exclui a vaga com o ID especificado.")
+    @Operation(summary = "Excluir uma vaga",
+            description = "Exclui a vaga com o ID especificado.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "204", description = "Vaga excluída com sucesso"),
             @ApiResponse(responseCode = "404", description = "Vaga não encontrada")
@@ -138,7 +144,8 @@ public class VagaController {
     }
 
     ///http://localhost:8080/aluga-junto/vaga/uuid/{uuid}
-    @Operation(summary = "Obter vaga por UUID", description = "Retorna os detalhes da vaga utilizando o UUID fornecido.")
+    @Operation(summary = "Obter vaga por UUID",
+            description = "Retorna os detalhes da vaga utilizando o UUID fornecido.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Vaga encontrada"),
             @ApiResponse(responseCode = "404", description = "Vaga não encontrada")
@@ -149,7 +156,8 @@ public class VagaController {
     }
 
     ///http://localhost:8080/aluga-junto/vaga/{uuid}
-    @Operation(summary = "Atualizar vaga com UUID", description = "Atualiza as informações de uma vaga utilizando o UUID fornecido.")
+    @Operation(summary = "Atualizar vaga com UUID",
+            description = "Atualiza as informações de uma vaga utilizando o UUID fornecido.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Vaga atualizada com sucesso"),
             @ApiResponse(responseCode = "404", description = "Vaga não encontrada")
@@ -160,6 +168,22 @@ public class VagaController {
     }
 
 
+
+    ///http://localhost:8080/aluga-junto/vaga/buscar
+    @Operation(summary = "Buscar vagas com filtros",
+            description = "Permite buscar vagas utilizando filtros opcionais como cidade, estado, bairro, gênero, pet e fumante."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Busca realizada com sucesso",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = Vaga.class))),
+            @ApiResponse(responseCode = "400", description = "Requisição inválida", content = @Content),
+    })
+    @PostMapping("/buscar-filtro")
+    public ResponseEntity<List<Vaga>> buscarComFiltros(@RequestBody FiltroVagaDTO filtro) {
+        List<Vaga> vagas = service.buscarComFiltros(filtro);
+        return ResponseEntity.ok(vagas);
+    }
 
 
 }

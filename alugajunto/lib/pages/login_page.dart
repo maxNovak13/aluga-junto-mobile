@@ -14,11 +14,11 @@ class _LoginPageState extends State<LoginPage> {
   final _emailController = TextEditingController();
   final _senhaController = TextEditingController();
 
+  final AuthService _authService = AuthService();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-
       appBar: AppBar(
         title: const Text(
           'Aluga Junto',
@@ -27,7 +27,6 @@ class _LoginPageState extends State<LoginPage> {
         backgroundColor: Colors.blue,
         centerTitle: true,
       ),
-
       resizeToAvoidBottomInset: true,
       backgroundColor: Colors.blue[100],
       body: SingleChildScrollView(
@@ -82,20 +81,32 @@ class _LoginPageState extends State<LoginPage> {
                   onPressed: () async {
                     final email = _emailController.text.trim();
                     final senha = _senhaController.text;
+                    final authService = AuthService();
 
-                    final result = await AuthService().login(email, senha);
-                    if (result != null) {
-                      final uuid = result['uuid'];
-                      final tipo = result['tipo'];
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => HomePage(uuidUsuario: uuid, tipoUsuario: tipo,),
-                        ),
-                      );
-                    }
-                    else {
+                    final response = await authService.login(email, senha);
+
+                    if (response != null && response.statusCode == 200) {
+                      // Login bem-sucedido
+                      String? tipo = await authService.getTipoUsuario();
+                      String? uuid = await authService.getUuidUsuario();
+
+                      if (tipo != null && uuid != null) {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => HomePage(uuidUsuario: uuid, tipoUsuario: tipo),
+                          ),
+                        );
+                      } else {
+                        if (!mounted) return;
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text("Erro ao recuperar dados do usuário")),
+                        );
+                      }
+                    } else {
                       if (!mounted) return;
+                      print('Status: ${response?.statusCode}');
+                      print('Body: ${response?.body}');
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(content: Text("Email ou senha incorretos")),
                       );

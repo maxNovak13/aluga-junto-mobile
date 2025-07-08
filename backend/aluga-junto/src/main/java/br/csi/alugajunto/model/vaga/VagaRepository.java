@@ -10,8 +10,4 @@ public interface VagaRepository extends JpaRepository<Vaga, Long> {
 
     public void deleteVagaByUuid(UUID uuid);
 
-    //List<Vaga> findVagaByNomeContainingIgnoreCase(String nome);
-
-    //List<Vaga> findVagaByCidade(String cidade);
-
 }

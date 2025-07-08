@@ -1,6 +1,7 @@
 package br.csi.alugajunto.infra.security;
 
 
+import br.csi.alugajunto.model.usuario.UsuarioRepository;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTCreationException;
@@ -15,13 +16,21 @@ import java.time.ZoneOffset;
 @Service
 public class TokenServiceJWT {
 
-    public String gerarToken(User user){
+    UsuarioRepository repository;
+
+    public TokenServiceJWT(UsuarioRepository repository) {
+        this.repository = repository;
+    }
+
+
+    public String gerarToken(String email, String role, String uuid){
         try{
             Algorithm algorithm = Algorithm.HMAC256("POO2");
             return JWT.create()
                     .withIssuer("API Aluga Junto")
-                    .withSubject(user.getUsername())
-                    .withClaim("ROLE", user.getAuthorities().stream().toList().get(0).toString())
+                    .withSubject(email)
+                    .withClaim("ROLE", role)
+                    .withClaim("uuid", uuid)
                     .withExpiresAt(dataExpiracao())
                     .sign(algorithm);
         } catch (JWTCreationException e){

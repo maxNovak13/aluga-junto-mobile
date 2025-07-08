@@ -27,7 +27,14 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
-    _futureVagas = ApiService.listarVagas();
+
+    if (widget.tipoUsuario == "user") {
+      // Se for usuário comum, buscar vagas que ele demonstrou interesse
+      _futureVagas = ApiService.listarVagasDoUsuario(widget.uuidUsuario);
+    } else {
+      // Se for outro tipo (ex: dono), listar todas
+      _futureVagas = ApiService.listarVagas();
+    }
   }
 
   void _onNavTap(int index) {
@@ -41,7 +48,6 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       appBar: CustomAppBar(
         onProfileTap: () {},
-        onSearchChanged: (query) {},
       ),
       body: Padding(
         padding: const EdgeInsets.all(16),
@@ -53,7 +59,9 @@ class _HomePageState extends State<HomePage> {
             } else if (snapshot.hasError) {
               return Center(child: Text('Erro: ${snapshot.error}'));
             } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-              return const Center(child: Text('Nenhuma vaga disponível.'));
+              return const Center(
+                  child:
+                  Text('Você ainda não demonstrou interesse em uma vaga.'));
             }
 
             final vagas = snapshot.data!;
@@ -67,7 +75,11 @@ class _HomePageState extends State<HomePage> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => DetalhesVagaPage(vaga: vaga, uuidUsuario: widget.uuidUsuario, tipoUsuario: widget.tipoUsuario,),
+                        builder: (context) => DetalhesVagaPage(
+                          vaga: vaga,
+                          uuidUsuario: widget.uuidUsuario,
+                          tipoUsuario: widget.tipoUsuario,
+                        ),
                       ),
                     );
                   },

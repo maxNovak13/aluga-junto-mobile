@@ -91,9 +91,16 @@ public class UsuarioService {
         return this.repository.findVagaByUsuario(this.repository.findUsuarioByUuid(uuidformatado).getId());
     }
 
-//    //busco usuários interessados em uma vaga do usuario
-//    public List<Usuario> listarUsuariosPorVagasUuid(String uuidusuario) {
-//        UUID uuidformatado = UUID.fromString(uuidusuario);
-//        return this.repository.findUsuarioByVaga(this.repository.findUsuarioByUuid(uuidformatado).getId());
-//    }
+    //busco usuários interessados em uma vaga do usuario
+    public List<Usuario> listarUsuariosPorVagasUuid(String uuidVaga) {
+        UUID uuidformatado = UUID.fromString(uuidVaga);
+        Vaga teste = this.vagaRepository.findVagaByUuid(uuidformatado);
+        System.out.println("TESTE vaga: " + teste);
+        return this.repository.findUsuarioByVaga(this.vagaRepository.findVagaByUuid(uuidformatado).getId());
+    }
+
+    //verifica se é interessado na vaga
+    public boolean verificarInteresse(Long vagaId, UUID usuarioUuid) {
+        return repository.existsInteresse(vagaId, usuarioUuid, "user");
+    }
 }

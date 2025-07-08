@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:alugajunto/service/api_service.dart';
+import 'package:flutter_multi_formatter/formatters/masked_input_formatter.dart';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
+import 'package:alugajunto/widgets/image_picker_widget.dart';
 
 File? _imagemSelecionada;
 final ImagePicker _picker = ImagePicker();
@@ -157,11 +159,19 @@ class _CadastroVagaPageState extends State<CadastroVagaPage> {
                   )
               ),
               TextFormField(
-                  controller: _cepController,
-                  maxLength: 9,
-                  decoration: const InputDecoration(
-                      labelText: 'CEP'
-                  )
+                controller: _cepController,
+                keyboardType: TextInputType.number,
+                inputFormatters: [MaskedInputFormatter('#####-###')],
+                decoration: const InputDecoration(
+                  labelText: 'CEP',
+                  border: OutlineInputBorder(),
+                ),
+                validator: (value) {
+                  if (value == null || value.length != 9) {
+                    return 'CEP inválido';
+                  }
+                  return null;
+                },
               ),
               const SizedBox(height: 24),
 
@@ -226,12 +236,12 @@ class _CadastroVagaPageState extends State<CadastroVagaPage> {
                 children: [
                   const Text('Imagem do lugar', style: TextStyle(fontSize: 16)),
                   const SizedBox(height: 8),
-                  if (_imagemSelecionada != null)
-                    Image.file(_imagemSelecionada!, height: 150),
-                  TextButton.icon(
-                    icon: const Icon(Icons.image),
-                    label: const Text('Escolher da galeria'),
-                    onPressed: _escolherImagemDaGaleria,
+                  ImagePickerWidget(
+                    onImageSelected: (image) {
+                      setState(() {
+                        _imagemSelecionada = image;
+                      });
+                    },
                   ),
                 ],
               ),
