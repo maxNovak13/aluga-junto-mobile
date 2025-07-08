@@ -1,6 +1,8 @@
 
 import 'package:flutter/material.dart';
-import 'package:alugajunto/service/api_service.dart';
+import 'package:flutter_multi_formatter/flutter_multi_formatter.dart';
+
+import '../service/auth_service.dart';
 
 class CadastroPage extends StatefulWidget {
   const CadastroPage({super.key});
@@ -11,6 +13,7 @@ class CadastroPage extends StatefulWidget {
 
 class _CadastroPageState extends State<CadastroPage> {
   final _formKey = GlobalKey<FormState>();
+  final authService = AuthService();
 
   String? tipoConta;
   final _nomeController = TextEditingController();
@@ -30,7 +33,7 @@ class _CadastroPageState extends State<CadastroPage> {
       };
 
       try {
-        final response = await ApiService.cadastrarUsuario(dadosCadastro);
+        final response = await authService.cadastrarUsuario(dadosCadastro);
 
         if (response.statusCode == 201) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -126,36 +129,20 @@ class _CadastroPageState extends State<CadastroPage> {
               const SizedBox(height: 8),
               Row(
                 children: [
-                  SizedBox(
-                    width: 80,
-                    child: TextFormField(
-                      controller: _dddController,
-                      keyboardType: TextInputType.number,
-                      maxLength: 2,
-                      decoration: const InputDecoration(
-                        labelText: 'DDD',
-                        border: OutlineInputBorder(),
-                      ),
-                      validator: (value) {
-                        if (value == null || value.length != 2) {
-                          return 'Inválido';
-                        }
-                        return null;
-                      },
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded( //aplicar MASCARA
-                    child: TextFormField(
+                  Expanded(//aplicar MASCARA
+                    child:
+                    TextFormField(
                       controller: _telefoneController,
                       keyboardType: TextInputType.phone,
-                      maxLength: 10,
+                      inputFormatters: [
+                        PhoneInputFormatter(defaultCountryCode: 'BR'),
+                      ],
                       decoration: const InputDecoration(
                         labelText: 'Número',
                         border: OutlineInputBorder(),
                       ),
                       validator: (value) {
-                        if (value == null || value.length < 8) {
+                        if (value == null || value.length < 15) {
                           return 'Número inválido';
                         }
                         return null;

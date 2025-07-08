@@ -1,18 +1,51 @@
 import 'package:flutter/material.dart';
 import 'package:alugajunto/model/vaga.dart';
+import 'package:alugajunto/model/usuario.dart';
 import 'package:alugajunto/service/api_service.dart';
 
-class VagaDetalhadaCard extends StatelessWidget {
+class VagaDetalhadaCard extends StatefulWidget {
   final Vaga vaga;
   final void Function()? onEditar;
   final void Function()? onRemover;
+  final bool mostrarInteressados;
 
   const VagaDetalhadaCard({
     super.key,
     required this.vaga,
     this.onEditar,
     this.onRemover,
+    this.mostrarInteressados = false,
   });
+
+  @override
+  State<VagaDetalhadaCard> createState() => _VagaDetalhadaCardState();
+}
+
+class _VagaDetalhadaCardState extends State<VagaDetalhadaCard> {
+  List<Usuario> interessados = [];
+  bool carregandoInteressados = false;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.mostrarInteressados && widget.vaga.uuid != null) {
+      carregarInteressados();
+    }
+  }
+
+  Future<void> carregarInteressados() async {
+    setState(() => carregandoInteressados = true);
+    try {
+      final resultado = await ApiService.listarInteressados(widget.vaga.uuid!);
+      setState(() {
+        interessados = resultado;
+      });
+    } catch (e) {
+      print("Erro ao carregar interessados: $e");
+    } finally {
+      setState(() => carregandoInteressados = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -27,18 +60,18 @@ class VagaDetalhadaCard extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.all(20.0),
             child: Text(
-              vaga.titulo,
+              widget.vaga.titulo,
               style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
           ),
 
           // Imagem
-          if (vaga.imagem != null)
+          if (widget.vaga.imagem != null)
             Center(
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(2),
                 child: Image.network(
-                  vaga.imagem!,
+                  widget.vaga.imagem!,
                   width: MediaQuery.of(context).size.width * 0.8,
                   height: 200,
                   fit: BoxFit.cover,
@@ -54,21 +87,21 @@ class VagaDetalhadaCard extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                _buildIconInfo(Icons.bed, '${vaga.dormitorio}'),
-                _buildIconInfo(Icons.bathtub, '${vaga.banheiro}'),
-                _buildIconInfo(Icons.directions_car, '${vaga.garagem}'),
-                _buildIconInfo(Icons.square_foot, '${vaga.area} m²'),
+                _buildIconInfo(Icons.bed, '${widget.vaga.dormitorio}'),
+                _buildIconInfo(Icons.bathtub, '${widget.vaga.banheiro}'),
+                _buildIconInfo(Icons.directions_car, '${widget.vaga.garagem}'),
+                _buildIconInfo(Icons.square_foot, '${widget.vaga.area} m²'),
               ],
             ),
           ),
 
           _buildSectionTitle('Descrição'),
-          _buildSectionText(vaga.descricao),
+          _buildSectionText(widget.vaga.descricao),
 
           _buildSectionTitle('Endereço'),
           _buildSectionText(
-            '${vaga.endereco.rua} - ${vaga.endereco.bairro}\n'
-                '${vaga.endereco.cidade} - ${vaga.endereco.estado}, ${vaga.endereco.cep}',
+            '${widget.vaga.endereco.rua} - ${widget.vaga.endereco.bairro}\n'
+                '${widget.vaga.endereco.cidade} - ${widget.vaga.endereco.estado}, ${widget.vaga.endereco.cep}',
           ),
 
           _buildSectionTitle('Perfil'),
@@ -79,17 +112,17 @@ class VagaDetalhadaCard extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    _buildIconInfo(Icons.smoking_rooms, vaga.perfil.fumante ? 'Fumante' : 'Não fumante'),
+                    _buildIconInfo(Icons.smoking_rooms, widget.vaga.perfil.fumante ? 'Fumante' : 'Não fumante'),
                     const SizedBox(width: 16),
-                    _buildIconInfo(Icons.pets, vaga.perfil.pet ? 'Aceita pet' : 'Sem pet'),
+                    _buildIconInfo(Icons.pets, widget.vaga.perfil.pet ? 'Aceita pet' : 'Sem pet'),
                   ],
                 ),
                 const SizedBox(height: 8),
                 Row(
                   children: [
-                    _buildIconInfo(Icons.person, vaga.perfil.genero),
+                    _buildIconInfo(Icons.person, widget.vaga.perfil.genero),
                     const SizedBox(width: 16),
-                    _buildIconInfo(Icons.cake, '${vaga.perfil.idade} anos'),
+                    _buildIconInfo(Icons.cake, '${widget.vaga.perfil.idade} anos'),
                   ],
                 ),
                 Padding(
@@ -101,7 +134,7 @@ class VagaDetalhadaCard extends StatelessWidget {
                       const SizedBox(width: 4),
                       Expanded(
                         child: Text(
-                          vaga.perfil.texto,
+                          widget.vaga.perfil.texto,
                           softWrap: true,
                           overflow: TextOverflow.visible,
                         ),
@@ -113,22 +146,50 @@ class VagaDetalhadaCard extends StatelessWidget {
             ),
           ),
 
+          // Seção: Interessados
+          if (widget.mostrarInteressados) ...[
+            _buildSectionTitle('Interessados'),
+            if (carregandoInteressados)
+              const Padding(
+                padding: EdgeInsets.all(12),
+                child: CircularProgressIndicator(),
+              )
+            else if (interessados.isEmpty)
+              const Padding(
+                padding: EdgeInsets.all(12),
+                child: Text('Nenhum interessado ainda.'),
+              )
+            else
+              Padding(
+                padding: const EdgeInsets.all(12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: interessados.map((usuario) {
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 4),
+                      child: Text('${usuario.nome} - ${usuario.telefone}'),
+                    );
+                  }).toList(),
+                ),
+              ),
+          ],
+
           const SizedBox(height: 12),
 
-          // Botões de ação (aparecem somente se tiver callbacks)
-          if (onEditar != null || onRemover != null)
+          // Botões de ação (editar/remover)
+          if (widget.onEditar != null || widget.onRemover != null)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
-                  if (onEditar != null)
+                  if (widget.onEditar != null)
                     TextButton.icon(
-                      onPressed: onEditar,
+                      onPressed: widget.onEditar,
                       icon: const Icon(Icons.edit, color: Colors.blue),
                       label: const Text('Editar', style: TextStyle(color: Colors.blue)),
                     ),
-                  if (onRemover != null)
+                  if (widget.onRemover != null)
                     TextButton.icon(
                       onPressed: () async {
                         final confirm = await showDialog<bool>(
@@ -144,12 +205,12 @@ class VagaDetalhadaCard extends StatelessWidget {
                         );
 
                         if (confirm == true) {
-                          final sucesso = await ApiService.excluirVaga(vaga.id);
+                          final sucesso = await ApiService.excluirVaga(widget.vaga.id);
                           if (sucesso) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(content: Text('Vaga excluída com sucesso')),
                             );
-                            onRemover!(); // Atualiza lista
+                            widget.onRemover!(); // Atualiza lista
                           } else {
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(content: Text('Erro ao excluir a vaga')),

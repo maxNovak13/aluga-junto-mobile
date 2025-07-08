@@ -143,23 +143,23 @@ public class UsuarioController {
             @ApiResponse(responseCode = "404", description = "Usuário não encontrado")
     })
     @GetMapping("/{uuid}/listar-vagas")
-    public List<Vaga> vagasDoUsuarioParte(@PathVariable String uuid) {
+    public List<Vaga> vagasDoUsuario(@PathVariable String uuid) {
         return this.service.listarVagasPorUsuarioUuid(uuid);
     }
 
 
-//    ///http://localhost:8080/aluga-junto/usuario/{uuid}/listar-usuarios
-//    @Operation(summary = "Listar usuários interessados em uma vaga")
-//    @ApiResponses(value = {
-//            @ApiResponse(responseCode = "200", description = "Usuários listados com sucesso",
-//                    content = {@Content(mediaType = "application/json",
-//                            schema = @Schema(implementation = Vaga.class))}),
-//            @ApiResponse(responseCode = "404", description = "Vaga não encontrada")
-//    })
-//    @GetMapping("/{uuid}/listar-interessados")
-//    public List<Usuario> interessadosEmUmaVaga(@PathVariable String uuid) {
-//        return this.service.listarUsuariosPorVagasUuid(uuid);
-//    }
+    ///http://localhost:8080/aluga-junto/usuario/{uuid}/listar-interessados
+    @Operation(summary = "Listar usuários interessados em uma vaga")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Usuários listados com sucesso",
+                    content = {@Content(mediaType = "application/json",
+                            schema = @Schema(implementation = Vaga.class))}),
+            @ApiResponse(responseCode = "404", description = "Vaga não encontrada")
+    })
+    @GetMapping("/{uuid}/listar-interessados")
+    public List<Usuario> interessadosEmUmaVaga(@PathVariable String uuid) {
+        return this.service.listarUsuariosPorVagasUuid(uuid);
+    }
 
     ///http://localhost:8080/aluga-junto/usuario/{uuid}/exclui-relacao/{id}
     @Operation(summary = "Deletar a relação de um  usuário e vaga por UUID")
@@ -172,6 +172,21 @@ public class UsuarioController {
     public ResponseEntity excluirRelacao(@PathVariable String uuid, @PathVariable Long id) {
         this.service.dessassociarUsuarioComVaga(uuid, id);
         return ResponseEntity.noContent().build();
+    }
+
+    ///http://localhost:8080/aluga-junto/usuario/{idVaga}/interesse/{uuidUsuario}
+    @Operation(summary = "verificar relação de um  usuário e vaga")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "Relação verificada"),
+            @ApiResponse(responseCode = "404", description = "Usuário ou vaga não encontrado")
+    })
+    @GetMapping("/{idVaga}/interesse/{uuidUsuario}")
+    public ResponseEntity<Boolean> verificarInteresse(
+            @PathVariable Long idVaga,
+            @PathVariable UUID uuidUsuario
+    ) {
+        boolean temInteresse = service.verificarInteresse(idVaga, uuidUsuario);
+        return ResponseEntity.ok(temInteresse);
     }
 
 

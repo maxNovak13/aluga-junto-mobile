@@ -22,6 +22,27 @@ class DetalhesVagaPage extends StatefulWidget {
 
 class _DetalhesVagaPageState extends State<DetalhesVagaPage> {
   bool _isLoading = false;
+  bool _jaMostrouInteresse = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _verificarInteresse();
+  }
+
+  Future<void> _verificarInteresse() async {
+    try {
+      final jaTemInteresse = await ApiService.verificarInteresse(
+        widget.vaga.id,
+        widget.uuidUsuario,
+      );
+      setState(() {
+        _jaMostrouInteresse = jaTemInteresse;
+      });
+    } catch (e) {
+      print("Erro ao verificar interesse: $e");
+    }
+  }
 
   Future<void> _mostrarInteresse() async {
     setState(() => _isLoading = true);
@@ -31,7 +52,10 @@ class _DetalhesVagaPageState extends State<DetalhesVagaPage> {
       widget.vaga.id,
     );
 
-    setState(() => _isLoading = false);
+    setState(() {
+      _isLoading = false;
+      if (sucesso) _jaMostrouInteresse = true;
+    });
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -52,33 +76,39 @@ class _DetalhesVagaPageState extends State<DetalhesVagaPage> {
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
-        child: VagaDetalhadaCard(vaga: widget.vaga),
+        child: VagaDetalhadaCard(vaga: widget.vaga, mostrarInteressados: false),
       ),
       bottomNavigationBar: widget.tipoUsuario.toUpperCase() != 'ADMIN'
           ? Padding(
         padding: const EdgeInsets.all(16),
         child: ElevatedButton.icon(
           style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.blue,
+            backgroundColor:
+            _jaMostrouInteresse ? Colors.indigo[900] : Colors.blue,
             padding: const EdgeInsets.symmetric(vertical: 16),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
             ),
           ),
-          onPressed: _isLoading ? null : _mostrarInteresse,
+          onPressed:
+          _isLoading || _jaMostrouInteresse ? null : _mostrarInteresse,
           icon: _isLoading
               ? const CircularProgressIndicator(
-            color: Colors.white,
+            color: Colors.blue,
             strokeWidth: 2,
           )
               : const Icon(Icons.favorite, color: Colors.white),
           label: Text(
-            _isLoading ? 'Enviando...' : 'Mostrar Interesse',
+            _isLoading
+                ? 'Enviando...'
+                : _jaMostrouInteresse
+                ? 'Você já demonstrou interesse'
+                : 'Mostrar Interesse',
             style: const TextStyle(fontSize: 18, color: Colors.white),
           ),
         ),
       )
-          : null
+          : null,
     );
   }
 }

@@ -1,7 +1,9 @@
 package br.csi.alugajunto.service;
 
+import br.csi.alugajunto.model.vaga.FiltroVagaDTO;
 import br.csi.alugajunto.model.vaga.Vaga;
 import br.csi.alugajunto.model.vaga.VagaRepository;
+import br.csi.alugajunto.model.vaga.VagaRepositoryCustom;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -15,9 +17,11 @@ import java.util.UUID;
 @Service
 public class VagaService {
     private final VagaRepository repository;
+    private final VagaRepositoryCustom vagaRepositoryCustom;
 
-    public VagaService(VagaRepository repository) {
+    public VagaService(VagaRepository repository, VagaRepositoryCustom vagaRepositoryCustom) {
         this.repository = repository;
+        this.vagaRepositoryCustom = vagaRepositoryCustom;
     }
 
     public void salvarVaga(Vaga vaga) {
@@ -93,6 +97,12 @@ public class VagaService {
 
         return caminho.toString().replace("\\", "/"); // ou só o nomeArquivo se quiser salvar só o nome
     }
+
+    public List<Vaga> buscarComFiltros(FiltroVagaDTO filtro) {
+        System.out.println("resultado busca "+ vagaRepositoryCustom.buscarComFiltros(filtro));
+        return vagaRepositoryCustom.buscarComFiltros(filtro);
+    }
+
 
 
 }

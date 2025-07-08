@@ -20,8 +20,16 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
     @Query("SELECT v FROM Vaga v JOIN v.usuarios u WHERE u.id = :id")
     List<Vaga> findVagaByUsuario(@Param("id") Long id);
 
-//    @Query("SELECT u FROM Usuario u JOIN u.vagas v WHERE v.id = :id")
-//    List<Usuario> findUsuarioByVaga(@Param("id") Long id);
+
+    @Query("SELECT COUNT(v) > 0 " +
+            "FROM Vaga v JOIN v.usuarios u " +
+            "WHERE v.id = :vagaId AND u.uuid = :usuarioUuid AND u.tipo = :tipo")
+    boolean existsInteresse(@Param("vagaId") Long vagaId,
+                            @Param("usuarioUuid") UUID usuarioUuid,
+                            @Param("tipo") String tipo);
+
+    @Query("SELECT u FROM Usuario u JOIN u.vagas v WHERE v.id = :id AND u.tipo = 'user'")
+    List<Usuario> findUsuarioByVaga(@Param("id") Long id);
 
     @Modifying
     @Query(value = "DELETE FROM usuario_vaga uv " +

@@ -112,6 +112,7 @@ class _MenuPageState extends State<MenuPage> {
             child: VagaDetalhadaCard(
               vaga: vaga,
               onRemover: () => _excluirVaga(vaga),
+              mostrarInteressados: true,
               // onEditar: () = _editar,  //nao foi implemtado ainda
             ),
           );
